@@ -46,4 +46,4 @@ in groups of size num/2 + 1
 
 Alias `rtree+`,
 
-Similar to rtree but will occationally divide into thirds
+Similar to rtree but will occasionally divide into thirds to get a better sized output.
