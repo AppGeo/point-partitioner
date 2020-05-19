@@ -1,10 +1,10 @@
 const clustersKmeans = require('@turf/clusters-kmeans').default;
 
-const kmeans = (items, size, getCoords) => {
+const kmeans = (items, opts) => {
   const thing = {
     type: 'FeatureCollection',
     features: items.map(item=> {
-      const geometry = getCoords(item)
+      const geometry = opts.getCoords(item)
       if (!geometry) {
         return;
       }
@@ -22,7 +22,7 @@ const kmeans = (items, size, getCoords) => {
     }).filter(item=>item)
   }
   const len = thing.features.length;
-  const groups = Math.trunc(len/size) + 1;
+  const groups = opts.groups || Math.trunc(len/opts.maxNumber) + 1;
   clustersKmeans(thing, {
     numberOfClusters: groups,
     mutate:  true

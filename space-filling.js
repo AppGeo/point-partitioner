@@ -1,17 +1,23 @@
 const nontree = require('nontree/lib/nontree');
 const calculateBounds = require('./calculate-bounds');
-
-const _getCoords = item=> item.coordinates;
+const { getSize: defaultGetSize } = require('./constants');
 
 const cordSym = Symbol('coordinates')
 const MAX_DEPTH = 25;
-const makeGetCoords = (getCoords = _getCoords) => (item) => {
+const makeGetCoords = (getCoords) => (item) => {
   if (!item[cordSym]) {
     item[cordSym] = getCoords(item);
   }
   return item[cordSym];
 }
+const sizeSym = Symbol('size')
 
+const makeGetSize= (getSize) => (item) => {
+  if (!item[sizeSym]) {
+    item[sizeSym] = getSize(item);
+  }
+  return item[sizeSym];
+}
 
 
 const partitionEasy = (items, size) => {
@@ -31,21 +37,24 @@ const partitionEasy = (items, size) => {
   }
   return out;
 }
-const partition = (items, size) => {
+const partitionNormal = (items, size, useGroups) => {
   const rem = items.length % size;
   if (!rem) {
+    if (useGroups) {
+      return partitionEasy(items, items.length / size);
+    }
     return partitionEasy(items, size);
   }
-  if (items.length < size) {
+  if (!useGroups && items.length < size) {
     return [items];
   }
-  const groups = Math.trunc(items.length/size) + 1;
+  const groups = useGroups ? size : Math.trunc(items.length/size) + 1;
   const min = Math.trunc(items.length/groups);
   const overhang = items.length - (groups * min);
   const out = [];
   let i = 0;
   let cur = [];
-  const getSize = () => {
+  const getRightSize = () => {
     if (out.length < overhang) {
       return min + 1;
     }
@@ -53,9 +62,105 @@ const partition = (items, size) => {
   }
   for (const item of items) {
     cur.push(item);
-    if (cur.length === getSize()) {
+    if (cur.length === getRightSize()) {
       out.push(cur);
       cur = []
+    }
+  }
+  if (cur.length) {
+    out.push(cur);
+  }
+  return out;
+}
+const partitionLessEasy = (items, size, getSize, length) => {
+  const out = [];
+  let cur = [];
+  let curLen = 0;
+  let next = [];
+  let nextLen = 0;
+  for (const item of items) {
+    const itemSize = getSize(item);
+    if (itemSize >= size) {
+      out.push([item]);
+      continue;
+    }
+    curLen += itemSize;
+    if (curLen > size) {
+      while (curLen > size) {
+        const outItem = cur.pop();
+        const outLen = getSize(outItem);
+        next.push(outItem);
+        curLen -= outLen;
+        nextLen += outLen;
+      }
+    }
+    cur.push(item);
+    if (curLen >= size) {
+      out.push(cur);
+      cur = next;
+      curLen = nextLen;
+      next = [];
+      nextLen = 0;
+    }
+  }
+  if (cur.length) {
+    out.push(cur);
+  }
+  return out;
+}
+const partition = (items, size, _getSize, useGroups) => {
+  if (_getSize === defaultGetSize) {
+    return partitionNormal(items, size, useGroups)
+  }
+  const getSize = makeGetSize(_getSize);
+  const length = items.reduce((acc, item) => acc + getSize(item), 0);
+  const rem = length % size;
+  if (!rem) {
+    if (useGroups) {
+      return partitionLessEasy(items, length / size, getSize, length);
+    }
+    return partitionLessEasy(items, size, getSize, length);
+  }
+  if (!useGroups && length < size) {
+    return [items];
+  }
+  const groups = useGroups ? size : Math.trunc(length/size) + 1;
+  const min = Math.trunc(length/groups);
+  const overhang = length - (groups * min);
+  const out = [];
+  let i = 0;
+  let cur = [];
+  let next = [];
+  let nextLen = 0;
+  const getRightSize = () => {
+    if (out.length < overhang) {
+      return min + 1;
+    }
+    return min;
+  }
+  for (const item of items) {
+    const itemSize = getSize(item);
+    if (itemSize >= size) {
+      out.push([item]);
+      continue;
+    }
+    curLen += itemSize;
+    if (curLen > getRightSize()) {
+      while (curLen > size) {
+        const outItem = cur.pop();
+        const outLen = getSize(outItem);
+        next.push(outItem);
+        curLen -= outLen;
+        nextLen += outLen;
+      }
+    }
+    cur.push(item);
+    if (curLen >=  getRightSize()) {
+      out.push(cur);
+      cur = next;
+      curLen = nextLen;
+      next = [];
+      nextLen = 0;
     }
   }
   if (cur.length) {
@@ -106,8 +211,8 @@ const sort = items => {
   });
   return dups;
 }
-const spaceFillingCurve = (items, size, _getCoords) => {
-  const getCoords = makeGetCoords(_getCoords)
+const spaceFillingCurve = (items, opts) => {
+  const getCoords = makeGetCoords(opts.getCoord)
   const bounds = calculateBounds(items, getCoords);
   for (const item of items) {
     item[spaceKey] = nontree.toNon(getCoords(item), 5, bounds);
@@ -120,7 +225,10 @@ const spaceFillingCurve = (items, size, _getCoords) => {
   if (sort(items).size) {
     throw new Error('should not still have duplicates');
   }
-  return partition(items, size);
+  if (opts.groups) {
+    return partition(items, opts.groups, opts.getSize, true)
+  }
+  return partition(items, opts.maxNumber, opts.getSize);
 }
 module.exports = spaceFillingCurve;
 module.exports.spaceKey = spaceKey
