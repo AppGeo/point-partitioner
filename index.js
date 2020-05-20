@@ -14,22 +14,21 @@ module.exports = (array, obj, _) => {
     obj = _ || {}
     obj.maxNumber = num;
   }
-  if (!opts) {
-    opts = {};
+  if (!obj) {
+    obj = {};
   }
-  const ourOpts = Object.assign({}, defauts, obj);
+  const opts = Object.assign({}, defaults, obj);
   switch (opts.algo) {
     case 'spaceFillingCurve':
     case 'sfc':
-      return spaceFillingCurve(array.slice(), ourOpts)
+      return spaceFillingCurve(array.slice(), opts)
     case 'kmeans':
     case 'k-means':
-      return kmeans(array, ourOpts)
+      return kmeans(array, opts)
     case 'rtree':
-      return rtree(array, ourOpts.maxNumber, ourOpts.getCoord)
     case 'rtree-plus':
     case 'rtree+':
-      return rtree(array, ourOpts.maxNumber, ourOpts.getCoord, true)
-    default: throw new Error(`unknown algorhthem: ${algo}`)
+      return rtree(array.slice(), opts)
+    default: throw new Error(`unknown algorhthem: ${opts.algo}`)
   }
 }

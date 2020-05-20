@@ -19,11 +19,8 @@ const makeGetSize= (getSize) => (item) => {
   return item[sizeSym];
 }
 
-
 const partitionEasy = (items, size) => {
   const out = [];
-  let i = -1;
-  let j = -1;
   let cur = [];
   for (const item of items) {
     cur.push(item);
@@ -38,6 +35,9 @@ const partitionEasy = (items, size) => {
   return out;
 }
 const partitionNormal = (items, size, useGroups) => {
+  if (useGroups && size >= items.length) {
+    return items.map(item => [item]);
+  }
   const rem = items.length % size;
   if (!rem) {
     if (useGroups) {
@@ -72,72 +72,47 @@ const partitionNormal = (items, size, useGroups) => {
   }
   return out;
 }
-const partitionLessEasy = (items, size, getSize, length) => {
-  const out = [];
-  let cur = [];
-  let curLen = 0;
-  let next = [];
-  let nextLen = 0;
-  for (const item of items) {
-    const itemSize = getSize(item);
-    if (itemSize >= size) {
-      out.push([item]);
-      continue;
-    }
-    curLen += itemSize;
-    if (curLen > size) {
-      while (curLen > size) {
-        const outItem = cur.pop();
-        const outLen = getSize(outItem);
-        next.push(outItem);
-        curLen -= outLen;
-        nextLen += outLen;
-      }
-    }
-    cur.push(item);
-    if (curLen >= size) {
-      out.push(cur);
-      cur = next;
-      curLen = nextLen;
-      next = [];
-      nextLen = 0;
-    }
-  }
-  if (cur.length) {
-    out.push(cur);
-  }
-  return out;
-}
 const partition = (items, size, _getSize, useGroups) => {
   if (_getSize === defaultGetSize) {
     return partitionNormal(items, size, useGroups)
   }
   const getSize = makeGetSize(_getSize);
   const length = items.reduce((acc, item) => acc + getSize(item), 0);
-  const rem = length % size;
-  if (!rem) {
+  if (length < size) {
     if (useGroups) {
-      return partitionLessEasy(items, length / size, getSize, length);
+      return items.map(item => [item]);
     }
-    return partitionLessEasy(items, size, getSize, length);
-  }
-  if (!useGroups && length < size) {
     return [items];
   }
-  const groups = useGroups ? size : Math.trunc(length/size) + 1;
-  const min = Math.trunc(length/groups);
-  const overhang = length - (groups * min);
+  const rem = length % size;
   const out = [];
-  let i = 0;
+  let getRightSize;
+  if (!rem) {
+    if (useGroups) {
+      const thisSize = length/size;
+      getRightSize = () => {
+        return thisSize
+      }
+    } else {
+      getRightSize = () => {
+        return size
+      }
+    }
+  } else {
+    const groups = useGroups ? size : Math.trunc(length/size) + 1;
+    const min = Math.trunc(length/groups);
+    const overhang = length - (groups * min);
+    getRightSize = () => {
+      if (out.length < overhang) {
+        return min + 1;
+      }
+      return min;
+    }
+  }
   let cur = [];
   let next = [];
   let nextLen = 0;
-  const getRightSize = () => {
-    if (out.length < overhang) {
-      return min + 1;
-    }
-    return min;
-  }
+
   for (const item of items) {
     const itemSize = getSize(item);
     if (itemSize >= size) {

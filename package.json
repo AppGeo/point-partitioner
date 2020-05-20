@@ -18,6 +18,12 @@
   "homepage": "https://github.com/AppGeo/point-partitioner#readme",
   "dependencies": {
     "@turf/clusters-kmeans": "^6.0.1",
+    "debug": "^4.1.1",
     "nontree": "^0.4.1"
+  },
+  "devDependencies": {
+    "@turf/random": "^6.0.2",
+    "tape": "^5.0.0",
+    "tape-catch": "^1.0.6"
   }
 }
