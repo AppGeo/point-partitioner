@@ -26,13 +26,12 @@ while (startSize < maxSize) {
       num: minMaxSize,
       groups: false
     })
-    if (minMaxSize <= startSize/3) {
-      options.push({
-        size: startSize,
-        num: minMaxSize,
-        groups: true
-      })
-    }
+    options.push({
+      size: startSize,
+      num: minMaxSize,
+      groups: true
+    })
+
     minMaxSize++;
   }
   startSize++;

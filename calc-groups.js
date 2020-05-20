@@ -17,24 +17,20 @@ const calcGroups = (total, maxNum, groupNum) => {
     while (curGroups.length) {
       if (curGroups.length === 3) {
         const sum = curGroups[0] + curGroups[1] + curGroups[2];
-        transforms.set(sum, curGroups);
+        if (!transforms.has(sum)) {
+          transforms.set(sum, [])
+        }
+        transforms.get(sum).push(curGroups)
         curGroups = [];
         nextGroups.push(sum)
       } else {
         let b = curGroups.pop();
         let a = curGroups.pop();
         const sum = a + b;
-        if (transforms.has(sum)) {
-          if (transforms.get(sum)[0] !== a) {
-            console.log('transforms', transforms);
-            console.log(sum, a, b);
-            console.log('curGroups', curGroups);
-            console.log('nextGroups', nextGroups);
-            throw new Error(`this shouldn't happen`);
-          }
-        } else {
-          transforms.set(sum, [a, b]);
+        if (!transforms.has(sum)) {
+          transforms.set(sum, [])
         }
+        transforms.get(sum).push([a, b])
         nextGroups.push(sum)
       }
     }

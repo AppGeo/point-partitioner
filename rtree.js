@@ -55,7 +55,11 @@ const basicSlice = (items, sizes) => {
   ];
 }
 const slice = (items, transforms, getSize, getLength) => {
-  const transform = transforms.get(getLength(items));
+  const rawtransform = transforms.get(getLength(items));
+  const transform = rawtransform.pop();
+  if (!rawtransform.length) {
+    transforms.delete(getLength(items));
+  }
   if (getSize === defaultGetSize) {
     return basicSlice(items, transform);
   }
