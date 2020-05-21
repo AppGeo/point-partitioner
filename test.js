@@ -15,10 +15,10 @@ const options = [
     groups: true
   }
 ]
-let startSize = 50;
-let maxSize = 500;
+let startSize = 100;
+let maxSize = 300;
 while (startSize < maxSize) {
-  let maxMaxSize = 52;
+  let maxMaxSize = 25;
   let minMaxSize = 2;
   while (minMaxSize < maxMaxSize) {
     options.push({
@@ -47,7 +47,60 @@ const rollup = arr => {
   }
   return out;
 }
-test('basic sizes', t => {
+const generateSizeStuff = num => {
+  return randomPoint(num, {bbox: [-180, -90, 180, 90]}).features.map((item, i) => {
+    item.properties.size = (i % 6) + 1
+    return item;
+  })
+}
+test('sizes', t => {
+  const getSize = item => item.properties.size;
+  t.test('sfc sizes, maxNum', t => {
+    const stuff = generateSizeStuff(100);
+    const out = pp(stuff, {
+      getSize,
+      maxNumber: 10,
+      algo: 'sfc'
+    });
+    console.log('items', out.map(item=>item.length))
+    console.log('sizes', out.map(item=>item.reduce((acc, item)=> acc + item.properties.size, 0)))
+    t.end();
+  })
+  t.test('sfc sizes, groups', t => {
+    const stuff = generateSizeStuff(200);
+    const out = pp(stuff, {
+      getSize,
+      groups: 10,
+      algo: 'sfc'
+    });
+    console.log('items', out.map(item=>item.length))
+    console.log('sizes', out.map(item=>item.reduce((acc, item)=> acc + item.properties.size, 0)))
+    t.end();
+  })
+  t.test('rtree sizes, maxNum', t => {
+    const stuff = generateSizeStuff(100);
+    const out = pp(stuff, {
+      getSize,
+      maxNumber: 10,
+      algo: 'rtree'
+    });
+    console.log('items', out.map(item=>item.length))
+    console.log('sizes', out.map(item=>item.reduce((acc, item)=> acc + item.properties.size, 0)))
+    t.end();
+  })
+  t.test('rtree sizes, groups', t => {
+    const stuff = generateSizeStuff(200);
+    const out = pp(stuff, {
+      getSize,
+      groups: 10,
+      algo: 'rtree'
+    });
+    console.log('items', out.map(item=>item.length))
+    console.log('sizes', out.map(item=>item.reduce((acc, item)=> acc + item.properties.size, 0)))
+    t.end();
+  })
+})
+test.skip('basic sizes', t => {
   const getCoord = item => item;
   const createArr = size => {
     const out = [];

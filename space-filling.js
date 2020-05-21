@@ -112,7 +112,7 @@ const partition = (items, size, _getSize, useGroups) => {
   let cur = [];
   let next = [];
   let nextLen = 0;
-
+  let curLen = 0;
   for (const item of items) {
     const itemSize = getSize(item);
     if (itemSize >= size) {

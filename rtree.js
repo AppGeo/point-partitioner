@@ -84,7 +84,7 @@ const slice = (items, transforms, getSize, getLength) => {
       while (curArrSize > outSize && arr.length) {
         const prev = arr.pop();
         const prevSize = getSize(prev);
-        j -= prevSize;
+        curArrSize -= prevSize;
         nextArrSize += prevSize;
         nextArr.push(prev);
       }
