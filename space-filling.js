@@ -121,7 +121,7 @@ const partition = (items, size, _getSize, useGroups) => {
     }
     curLen += itemSize;
     if (curLen > getRightSize()) {
-      while (curLen > size) {
+      while (curLen > getRightSize()) {
         const outItem = cur.pop();
         const outLen = getSize(outItem);
         next.push(outItem);

@@ -66,7 +66,6 @@ const slice = (items, transforms, getSize, getLength) => {
   let i = 0;
   const out = transform.map((size) => {
     const thing = [];
-    thing[lenSym] = size;
     return thing;
   });
   let k = -1;
@@ -114,7 +113,6 @@ const rtree = (items, opts) => {
   const done = [];
   while (toDo.length) {
     const cur = toDo.pop();
-    // console.log(cur.length);
     if (!transforms.has(getLength(cur))) {
       done.push(cur);
       continue;

@@ -56,10 +56,10 @@ const generateSizeStuff = num => {
 test('sizes', t => {
   const getSize = item => item.properties.size;
   t.test('sfc sizes, maxNum', t => {
-    const stuff = generateSizeStuff(100);
+    const stuff = generateSizeStuff(500);
     const out = pp(stuff, {
       getSize,
-      maxNumber: 10,
+      maxNumber: 30,
       algo: 'sfc'
     });
     console.log('items', out.map(item=>item.length))
@@ -67,7 +67,7 @@ test('sizes', t => {
     t.end();
   })
   t.test('sfc sizes, groups', t => {
-    const stuff = generateSizeStuff(200);
+    const stuff = generateSizeStuff(500);
     const out = pp(stuff, {
       getSize,
       groups: 10,
@@ -78,10 +78,10 @@ test('sizes', t => {
     t.end();
   })
   t.test('rtree sizes, maxNum', t => {
-    const stuff = generateSizeStuff(100);
+    const stuff = generateSizeStuff(500);
     const out = pp(stuff, {
       getSize,
-      maxNumber: 10,
+      maxNumber: 30,
       algo: 'rtree'
     });
     console.log('items', out.map(item=>item.length))
@@ -89,7 +89,7 @@ test('sizes', t => {
     t.end();
   })
   t.test('rtree sizes, groups', t => {
-    const stuff = generateSizeStuff(200);
+    const stuff = generateSizeStuff(500);
     const out = pp(stuff, {
       getSize,
       groups: 10,
