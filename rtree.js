@@ -11,9 +11,30 @@ const makeGetCoords = (getCoords) => (item) => {
   return item[cordSym];
 }
 const sizeSym = Symbol('r-size')
-
-const makeGetSize= (getSize) => {
-  if (getSize === defaultGetSize) {
+class MergedPoints {
+  constructor(point) {
+    this.points = [point];
+    this[sizeSym] = point[sizeSym];
+    this[cordSym] = point[cordSym];
+  }
+  add(point) {
+    if (point instanceof MergedPoints) {
+      this.points.push(...point.points)
+    } else {
+      this.points.push(point);
+    }
+    this[sizeSym] += point[sizeSym];
+    return this;
+  }
+}
+const mergeItems = (a, b) => {
+  if (!(a instanceof MergedPoints)) {
+    a = new MergedPoints(a);
+  }
+  return a.add(b);
+}
+const makeGetSize= (getSize, mergeDups) => {
+  if (getSize === defaultGetSize && !mergeDups) {
     return getSize;
   }
   return (item) => {
@@ -24,12 +45,12 @@ const makeGetSize= (getSize) => {
   }
 }
 const lenSym = Symbol('r-length')
-const makeGetLength = (getSize) => {
-  if (getSize === defaultGetSize) {
+const makeGetLength = (getSize, mergeDups) => {
+  if (getSize === defaultGetSize && !mergeDups) {
     return arr => arr.length;
   }
   return (arr) => {
-    if (getSize === defaultGetSize) {
+    if (getSize === defaultGetSize && !mergeDups) {
       return arr.length;
     }
     if (!arr[lenSym]) {
@@ -54,13 +75,29 @@ const basicSlice = (items, sizes) => {
     items.slice(-sizes[2])
   ];
 }
-const slice = (items, transforms, getSize, getLength) => {
+const unMerge = items => {
+  if (!items.some(item => item instanceof MergedPoints)) {
+    return items;
+  }
+  const out = [];
+  for (const item of items) {
+    if (item instanceof MergedPoints) {
+      out.push(...item.points)
+    } else {
+      out.push(item);
+    }
+  }
+  return out;
+}
+const slice = (items, transforms, getSize, getLength, mergeDups) => {
+  console.log('transforms', transforms);
+  console.log('length', getLength(items))
   const rawtransform = transforms.get(getLength(items));
   const transform = rawtransform.pop();
   if (!rawtransform.length) {
     transforms.delete(getLength(items));
   }
-  if (getSize === defaultGetSize) {
+  if (getSize === defaultGetSize && !mergeDups) {
     return basicSlice(items, transform);
   }
   let i = 0;
@@ -91,9 +128,34 @@ const slice = (items, transforms, getSize, getLength) => {
     }
   }
   out[out.length - 1].push(...items.slice(i));
+  if (mergeDups) {
+    return out.map(arr=>unMerge(arr));
+  }
   return out;
 }
-const sort = (items, getCoords) => {
+const merge = (items, getCoords) => {
+  let i = 0;
+  let triggered = false;
+  while (++i < items.length) {
+    const prevItem = items[i - 1];
+    const curItem = items[i];
+    const prevCoord = getCoords(prevItem);
+    const curCoord = getCoords(curItem);
+    if (
+      prevCoord[0] === curCoord[0]
+      && prevCoord[1] === curCoord[1]
+    ) {
+      items[i] = mergeItems(prevItem, curItem);
+      items[i - 1] = false;
+      triggered = true;
+    }
+  }
+  if (triggered) {
+    return items.filter(item=>item);
+  }
+  return items;
+}
+const sort = (items, getCoords, first) => {
   const bounds = calculateBounds(items, getCoords);
   const xDif = bounds[2] - bounds[0];
   const yDif = bounds[3] - bounds[1];
@@ -102,23 +164,31 @@ const sort = (items, getCoords) => {
   } else {
     items.sort(sortY);
   }
+  if (first) {
+    return merge(items, getCoords)
+  }
+  return items;
 }
 const rtree = (items, opts) => {
-  const getCoords = makeGetCoords(opts.getCoord);
-  const getSize = makeGetSize(opts.getSize);
-  const getLength = makeGetLength(getSize);
+  const getCoords = makeGetCoords(opts.getCoord, opts.mergeDups);
+  const getSize = makeGetSize(opts.getSize, opts.mergeDups);
+  const getLength = makeGetLength(getSize, opts.mergeDups);
   const size = getLength(items);
   const transforms = calculateGroups(size, opts.maxNumber, opts.groups);
   const toDo = [items];
   const done = [];
+  let first = opts.mergeDups;
   while (toDo.length) {
-    const cur = toDo.pop();
+    let cur = toDo.pop();
     if (!transforms.has(getLength(cur))) {
       done.push(cur);
       continue;
     }
-    sort(cur, getCoords)
-    toDo.push(...slice(cur, transforms, getSize, getLength));
+    cur = sort(cur, getCoords, first);
+    if (first) {
+      first = false;
+    }
+    toDo.push(...slice(cur, transforms, getSize, getLength, opts.mergeDups));
   }
   return done;
 }

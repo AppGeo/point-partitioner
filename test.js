@@ -16,10 +16,10 @@ const options = [
   }
 ]
 let startSize = 100;
-let maxSize = 300;
+let maxSize = 200;
 while (startSize < maxSize) {
   let maxMaxSize = 25;
-  let minMaxSize = 2;
+  let minMaxSize = 10;
   while (minMaxSize < maxMaxSize) {
     options.push({
       size: startSize,
@@ -143,3 +143,36 @@ test.skip('basic sizes', t => {
     }
   }
 });
+test('duplicates', t => {
+  const getCoord = item => item;
+  const createArr = size => {
+    const out = [];
+    let flip = false;
+    while (out.length < size) {
+      const position = randomPosition([-180, -90, 180, 90])
+      if (flip && out.length + 1 < size) {
+        out.push(position, position);
+      } else {
+        out.push(position);
+      }
+      flip = !flip;
+    }
+    return out;
+  }
+  t.test('dup points', t => {
+      t.plan(1);
+      const input = createArr(100);
+      const out = pp(input, {
+        maxNumber: 10,
+        algo: 'rtree',
+        getCoord
+      })
+      t.deepEqual(rollup(out), {10:10}, 'correct distribution')
+  })
+  t.test('legecy opts 2', t => {
+      t.plan(1);
+      const input = randomPoint(100, {bbox: [-180, -90, 180, 90]}).features;
+      const out = pp(input, 10)
+      t.deepEqual(rollup(out), {10:10}, 'correct distribution')
+  })
+})
