@@ -113,10 +113,7 @@ const partition = (items, size, _getSize, useGroups) => {
   let next = [];
   let nextLen = 0;
   let curLen = 0;
-  let len = items.length;
   for (const item of items) {
-    len--;
-    let first = true;
     const itemSize = getSize(item);
     if (itemSize >= getRightSize()) {
       out.push([item]);
@@ -131,10 +128,7 @@ const partition = (items, size, _getSize, useGroups) => {
       curLen -= outLen;
       nextLen += outLen;
     }
-    if (first) {
-      cur.push(item);
-      first = false;
-    }
+    cur.push(item);
     if (curLen >=  getRightSize()) {
       out.push(cur);
       cur = next;
