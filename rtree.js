@@ -90,8 +90,6 @@ const unMerge = items => {
   return out;
 }
 const slice = (items, transforms, getSize, getLength, mergeDups) => {
-  console.log('transforms', transforms);
-  console.log('length', getLength(items))
   const rawtransform = transforms.get(getLength(items));
   const transform = rawtransform.pop();
   if (!rawtransform.length) {

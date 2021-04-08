@@ -115,20 +115,20 @@ const partition = (items, size, _getSize, useGroups) => {
   let curLen = 0;
   for (const item of items) {
     const itemSize = getSize(item);
-    if (itemSize >= size) {
+    if (itemSize >= getRightSize()) {
       out.push([item]);
       continue;
     }
     curLen += itemSize;
-    if (curLen > getRightSize()) {
-      while (curLen > getRightSize()) {
-        const outItem = cur.pop();
-        const outLen = getSize(outItem);
-        next.push(outItem);
-        curLen -= outLen;
-        nextLen += outLen;
-      }
+
+    while (curLen > getRightSize()) {
+      const outItem = cur.pop();
+      const outLen = getSize(outItem);
+      next.push(outItem);
+      curLen -= outLen;
+      nextLen += outLen;
     }
+
     cur.push(item);
     if (curLen >=  getRightSize()) {
       out.push(cur);
