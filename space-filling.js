@@ -113,7 +113,10 @@ const partition = (items, size, _getSize, useGroups) => {
   let next = [];
   let nextLen = 0;
   let curLen = 0;
+  let len = items.length;
   for (const item of items) {
+    len--;
+    let first = true;
     const itemSize = getSize(item);
     if (itemSize >= getRightSize()) {
       out.push([item]);
@@ -128,8 +131,10 @@ const partition = (items, size, _getSize, useGroups) => {
       curLen -= outLen;
       nextLen += outLen;
     }
-
-    cur.push(item);
+    if (first) {
+      cur.push(item);
+      first = false;
+    }
     if (curLen >=  getRightSize()) {
       out.push(cur);
       cur = next;
@@ -138,9 +143,27 @@ const partition = (items, size, _getSize, useGroups) => {
       nextLen = 0;
     }
   }
+  while (nextLen) {
+    cur = next;
+    curLen = nextLen;
+    next = [];
+    nextLen = 0;
+    while (curLen > getRightSize()) {
+      const outItem = cur.pop();
+      const outLen = getSize(outItem);
+      next.push(outItem);
+      curLen -= outLen;
+      nextLen += outLen;
+    }
+    if (cur.length) {
+      out.push(cur);
+    }
+    cur = [];
+  }
   if (cur.length) {
     out.push(cur);
   }
+
   return out;
 }
 const spaceKey = Symbol('spaceKey');
