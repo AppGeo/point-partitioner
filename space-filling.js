@@ -11,7 +11,7 @@ const makeGetCoords = (getCoords) => (item) => {
   return item[cordSym];
 }
 const sizeSym = Symbol('size')
-
+const groupSizeSym = Symbol('groupSize')
 const makeGetSize= (getSize) => (item) => {
   if (!item[sizeSym]) {
     item[sizeSym] = getSize(item);
@@ -71,6 +71,14 @@ const partitionNormal = (items, size, useGroups) => {
     out.push(cur);
   }
   return out;
+}
+const makeGetGroupSize = getSize => arr => {
+  if (arr[groupSizeSym]) {
+    return arr[groupSizeSym];
+  }
+  const size = arr.reduce((acc, item)=> acc + getSize(item), 0);
+  arr[groupSizeSym] = size;
+  return size;
 }
 const partition = (items, size, _getSize, useGroups) => {
   if (_getSize === defaultGetSize) {
@@ -158,6 +166,26 @@ const partition = (items, size, _getSize, useGroups) => {
     out.push(cur);
   }
 
+  if (!useGroups) {
+    return out;
+  }
+  if (out.length <= size) {
+    return out;
+  }
+  const getGroupSize = makeGetGroupSize(getSize);
+  for (const item of out) {
+    getGroupSize(item);
+  }
+  while (out.length > size) {
+    out.sort((a, b)=>b[groupSizeSym] - a[groupSizeSym])
+    const smallest = out.pop();
+    const penesmallest = out.pop();
+    const newThing = [];
+    newThing.push(...penesmallest);
+    newThing.push(...smallest);
+    getGroupSize(newThing);
+    out.push(newThing);
+  }
   return out;
 }
 const spaceKey = Symbol('spaceKey');
